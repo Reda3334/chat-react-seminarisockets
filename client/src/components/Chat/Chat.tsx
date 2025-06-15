@@ -27,22 +27,38 @@ const Chat: React.FC = () => {
     const token = localStorage.getItem('accessToken');
 
     socketRef.current = io('http://localhost:3001', {
-      auth: {
-        token,
-      },
-    });
+        auth: {
+      token,
+    },
+  });
 
-    socketRef.current.on('receive_message', (data: ChatMessage) => {
-      console.log('Mensaje recibido:', data);
-      setMessageList(prev => [...prev, data]);
-    });
+  socketRef.current.on('receive_message', (data: ChatMessage) => {
+    console.log('Mensaje recibido:', data);
+    setMessageList(prev => [...prev, data]);
+  });
 
-    socketRef.current.on('status', (data) => {
-      console.debug('Estado recibido:', data);
-      if (data.status === 'unauthorized') {
-        window.location.href = '/';
+  socketRef.current.on('status', (data) => {
+    console.debug('Estado recibido:', data);
+    if (data.status === 'unauthorized') {
+      window.location.href = '/';
+    }
+  });
+
+  // NUEVO: Escuchar cuando un usuario se conecta
+  socketRef.current.on('user_connected', (data: { socketId: string }) => {
+    // Puedes mostrar un toast, alerta, o añadirlo a la lista de mensajes
+    alert(`Nuevo usuario conectado: ${data.socketId}`);
+    // O si prefieres, puedes añadirlo como mensaje especial en el chat:
+    setMessageList(prev => [
+      ...prev,
+      {
+        room: room,
+        author: 'Sistema',
+        message: `Nuevo usuario conectado: ${data.socketId}`,
+        time: new Date().toLocaleTimeString(),
       }
-    });
+    ]);
+  });
 
     return () => {
       socketRef.current?.disconnect();
